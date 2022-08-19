@@ -1,7 +1,6 @@
 .env
 cred
 prod-ca-2021.crt
-build
 tsconfig.tsbuildinfo
 node_modules
 ca-certificate.crt
