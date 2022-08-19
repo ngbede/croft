@@ -1,0 +1,59 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Croft's backend src code using an API first approach.",
+  "main": "index.js",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "preserve": "npm run build",
+    "serve": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q build/server.js\"",
+    "prestart": "npm run build",
+    "start": "cross-env NODE_ENV=production node build/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngbede/croft.git"
+  },
+  "keywords": [
+    "REST",
+    "SQL"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ngbede/croft/issues"
+  },
+  "homepage": "https://github.com/ngbede/croft#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^1.35.4",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "helmet": "^5.1.0",
+    "joi": "^17.6.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.7.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.21.1",
+    "validator": "^13.7.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.13",
+    "@types/helmet": "^4.0.0",
+    "@types/joi": "^17.2.3",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^18.0.0",
+    "@types/pg": "^8.6.5",
+    "@types/sequelize": "^4.28.14",
+    "@types/validator": "^13.7.4",
+    "concurrently": "^7.2.2",
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.18",
+    "rimraf": "^3.0.2"
+  }
+}

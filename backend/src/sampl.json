@@ -1,0 +1,19 @@
+{
+    "id": "7c412a47-2d16-4db9-b7d9-99e807d88ab1",
+    "farm_id": "6d3c8550-0ed7-45cf-a9de-1e5e60c4fb69",
+    "batch_id": "c5c75705-222e-4460-acae-1747adfccb4e",
+    "created_by": "d29fb978-b378-4a17-8ca4-77e6dc158b6f",
+    "egg_count": [
+        {
+            "crates": 4,
+            "timestamp": "2022-07-16T21:59:02.053Z",
+            "extra_eggs": 10,
+            "eggs_picked": 130
+        }
+    ],
+    "created_at": "2022-07-16T22:48:47.266344",
+    "updated_at": "2022-07-16T22:48:47.266344",
+    "comment": [],
+    "type": "egg-count",
+    "chicken_count": []
+}
