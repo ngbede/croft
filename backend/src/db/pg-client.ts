@@ -5,7 +5,7 @@ export const params: object = {
   host: process.env.host,
   database: process.env.database,
   password: process.env.password,
-  port: parseInt(process.env.port!),
+  port: parseInt(process.env.dbPort!),
   max: 30,
   idleTimeoutMillis: 300000,
   connectionTimeoutMillis: 60000
