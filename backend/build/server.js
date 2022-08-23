@@ -15,13 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const init_1 = require("./db/init");
 const pg_1 = require("./db/pg");
-// TODO: Deploy app to digital ocean
-app_1.default.listen(4000, () => __awaiter(void 0, void 0, void 0, function* () {
+require('dotenv/config');
+app_1.default.listen(process.env.port, () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield pg_1.pgInstance.connect()
             .then(_ => {
             if (init_1.supabaseServer && init_1.supabase)
-                console.log("Running on port 4000");
+                console.log(`Running on port ${process.env.port}`);
             else
                 console.log("client failed to connect");
         });
