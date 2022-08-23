@@ -6,6 +6,7 @@ import userRoute from "../routes/user"
 import farmRouter from "../routes/farm"
 import batchRouter from "../routes/batch"
 import stockRouter from "../routes/stock"
+import { Request, Response } from "express"
 const cors = require("cors")
 
 const app = express()
@@ -21,4 +22,8 @@ app.use(baseUri, userRoute)
 app.use(baseUri, farmRouter)
 app.use(baseUri, batchRouter)
 app.use(baseUri, stockRouter)
+app.use((req: Request,res: Response) => {
+    res.status(404).json({error: 'Route not found', path: `${req.url}`})
+})
+
 export default app
