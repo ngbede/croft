@@ -4,3 +4,4 @@ prod-ca-2021.crt
 tsconfig.tsbuildinfo
 node_modules
 ca-certificate.crt
+build
