@@ -4,19 +4,18 @@ import validator from "validator"
 import { supabase } from "../db/init"
 import { pgInstance } from "../db/pg"
 import parseErrors from "../utils/parse-validation-errors"
+import ErrorObject from "../schema/error"
 
 export default class BaseController {
     tableName: string
-    query: string
     nameSpace: string
 
-    constructor(tableName: string, query: string, nameSpace: string) {
+    constructor(tableName: string, nameSpace: string) {
         this.tableName = tableName
-        this.query = query
         this.nameSpace = nameSpace
     }
 
-    async get(req:Request, res: Response, next: NextFunction) {
+    async get(req:Request, res: Response, next: NextFunction, query?: string) {
        const id = req.params.id
 
        if (id) {
@@ -27,25 +26,23 @@ export default class BaseController {
          }
 
          // run custom queries directly on PG
-         if (this.query.length >= 1) {
+         if (query) {
             try {
-                const response = await pgInstance.query(this.query, [id])
-                console.log(response)
+                const response = await pgInstance.query(query, [id])
                 if (response.rowCount > 0) {
                     return res.status(200).json(response.rows)
                 } else {
                     return res.status(404).json({message: `Unable to fetch data for given ${this.nameSpace} with id ${id}`})
                 } 
             } catch (error: any) {
-                console.error(error)
-                error.status = 500
-                return next(error)
+                const err: ErrorObject = {code: 500, error: `${error}`}
+                return next(err)
             }
          } else {
             const { data, error } = await supabase.from(this.tableName).select("*").match({id: id})
             if (error) {
-                console.error(error)
-                return res.status(500).json({message: "Internal server error, unable to fetch data"})
+                const err: ErrorObject = {code: 500, error: `${error}`}
+                return next(err)
             }
             return res.status(200).json(data)
          }
@@ -61,7 +58,7 @@ export default class BaseController {
         const errors = parseErrors(validationError)
 
         if (errors.length > 0) {
-            const error: Object = {message: "validation failed on request body", status: 422, errors: errors}
+            const error: ErrorObject = {message: "validation failed on request body", code: 422, error: errors}
             return next(error)
         }
 
@@ -71,11 +68,11 @@ export default class BaseController {
             console.error(error)
             return next(error)
         } else {
-            return res.status(200).json({message: `New ${this.nameSpace} craeted`, data: data[0]})
+            return res.status(200).json({message: `New ${this.nameSpace} created`, data: data[0]})
         }
     }
     
-    async patch(req:Request, res: Response, next: NextFunction) {
+    async patch(req:Request, res: Response, next: NextFunction, columns?: string[]) {
         const id = req.params.id
         const { body } = req
         if (!validator.isUUID(id)) {
@@ -84,11 +81,14 @@ export default class BaseController {
         }
 
         const { data, error } = await supabase.from(this.tableName)
-        .update({body})
+        .update(body)
         .match({id: id})
-        
+
         if (error) {
-            return res.status(400).json(error)
+            // Postgrest doesn't return any error object for some reason
+            console.error(error)
+            const err: ErrorObject = { message: error.message, code: 400, error: error.details}
+            return next(err)
         } else {
             return res.status(200).json(data)
         }
@@ -97,15 +97,21 @@ export default class BaseController {
     async delete(req:Request, res: Response, next: NextFunction) {
         const id = req.params.id
         if (!validator.isUUID(id)) {
-            const error: Object = { message: "Invalid uuid sent", status: 404}
+            const error: ErrorObject = { message: "Invalid uuid sent", code: 404}
             return next(error)
         }
 
         const { data, error } = await supabase.from(this.tableName).delete().match({id: id})
 
         if (error) {
-            return res.status(400).json(error)
+            const err: ErrorObject = { message: error.message, code: 400, error: error.details}
+            return next(err)
         }
-        return res.status(200).json(data)
+
+        if (data.length > 0) {
+            return res.status(200).json({message: `${this.nameSpace} successfully deleted`, data: data})
+        } else {
+            return res.status(200).json({message: `No ${this.nameSpace} with id ${id} found`})
+        }
     }
 }
