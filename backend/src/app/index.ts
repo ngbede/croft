@@ -1,4 +1,4 @@
-import express from "express"
+import express, { NextFunction } from "express"
 import bodyParser from "body-parser"
 import helmet from "helmet"
 import morgan from "morgan"
@@ -7,6 +7,8 @@ import farmRouter from "../routes/farm"
 import batchRouter from "../routes/batch"
 import stockRouter from "../routes/stock"
 import { Request, Response } from "express"
+import ErrorObject from "../schema/error"
+import errorHandle from "../middleware/error-handle"
 const cors = require("cors")
 
 const app = express()
@@ -22,8 +24,11 @@ app.use(baseUri, userRoute)
 app.use(baseUri, farmRouter)
 app.use(baseUri, batchRouter)
 app.use(baseUri, stockRouter)
-app.use((req: Request,res: Response) => {
+app.use((req: Request,res: Response, next: NextFunction) => {
+    console.log(next)
     res.status(404).json({error: 'Route not found', path: `${req.url}`})
 })
+
+app.use(errorHandle)
 
 export default app
