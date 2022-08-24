@@ -1,12 +1,13 @@
-import { Request, Response } from "express"
+import { NextFunction, Request, Response } from "express"
 import { supabase } from "../db/init"
 import validator from "validator"
 import parseErrors from "../utils/parse-validation-errors"
-import { pgInstance } from "../db/pg"
 import { stock, stockSchema } from "../schema/stock-schema"
 import { getStockInfo } from "../queries/stock-queries"
 import { StockOperations, StockTypes } from "../schema/enums"
-import console from "console"
+import BaseController from "./base-controller"
+
+const baseControl: BaseController = new BaseController("stock_report", "stock count")
 
 export const createStock = async (req: Request, res: Response) => {
     // add a check to prevent duplicate stock-count per day i.e one stock count doc per day per farm for diff stock types
@@ -62,70 +63,12 @@ export const createStock = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteStock = async (req: Request, res: Response) => {
-    const id = req.params.id
-    const isValidUUID = validator.isUUID(id)
-    
-    if (!isValidUUID) {
-        return res.status(422).json({message: "Invalid uuid sent"})
-    }
-    
-    const { data, error } = await supabase.from("stock_report").delete().match({id: id})
-    
-    if (error) {
-        console.error(error)
-        return res.status(500).json({message: "Internal server error"})
-    }
-
-    if (data.length > 0){
-        return res.status(200).json({message: `Stock with id ${id} deleted`, data: data})
-    } else {
-        return res.status(400).json({message: `No stock with specified id ${id} exist`})
-    }
+export const deleteStock = async (req: Request, res: Response, next: NextFunction) => {
+    return await baseControl.delete(req, res, next)
 }
 
-export const getStock = async (req: Request, res: Response) => {
-    const id = req.params.id
-    const isValidUUID = validator.isUUID(id)
-    if (!isValidUUID) {
-        return res.status(404).json({message: "Invalid uuid sent"})
-    }
-    
-    let stockInfo
-
-    try {
-        const response = await pgInstance.query(getStockInfo(), [id])
-        if (response.rowCount > 0) {
-            stockInfo = response.rows[0]
-        } else {
-            console.error(`No stock info found for given id ${id}`)
-        } 
-    } catch (error) {
-        console.error(`Unable to connect to PG client.\nErr: ${error}`)
-    }
-
-    const { data, error } = await supabase.from("stock_report").select("*").match({id: id})
-    
-    if (error) {
-        console.error(error)
-        return res.status(500).json({message: "Internal server error"})
-    }
-
-    if (data.length > 0){
-        if (stockInfo) {
-            // remove id's we've fetched info for
-            delete data[0].farm_id
-            delete data[0].batch_id
-            delete data[0].created_by
-
-            data[0].farm_name = stockInfo.farm_name
-            data[0].batch_name = stockInfo.batch_name
-            data[0].created_by = stockInfo.created_by
-        }
-        return res.status(200).json(data[0])
-    } else {
-        return res.status(400).json({message: `No stock with specified id ${id} exist`})
-    }
+export const getStock = async (req: Request, res: Response, next: NextFunction) => {
+    return await baseControl.get(req, res, next, getStockInfo())
 }
 
 export const updateStock = async (req: Request, res: Response) => {

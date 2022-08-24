@@ -7,6 +7,6 @@ userRoute.get("/user/:id", getUserViaId)
 userRoute.post("/user/signup", createUser)
 userRoute.post("/user/reset-password", resetPassword)
 userRoute.put("/user/signin", signIn)
-userRoute.delete("/user/:id", deleteUser)
+// userRoute.delete("/user/:id", deleteUser)
 
 export default userRoute
