@@ -96,7 +96,7 @@ export default class BaseController {
         this._parseUUID(id, next)
 
         const { data, error } = await this.api.from(this.tableName)
-        .update(body)
+        .update({...body, updated_at: new Date().toJSON()})
         .match({id: id})
 
         if (error) {
