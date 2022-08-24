@@ -1,18 +1,21 @@
 import { Request, Response, NextFunction } from "express"
 import { ObjectSchema } from "joi"
 import validator from "validator"
-import { supabase } from "../db/init"
+import { supabase, supabaseServer } from "../db/init"
 import { pgInstance } from "../db/pg"
 import parseErrors from "../utils/parse-validation-errors"
-import ErrorObject from "../schema/error"
+import ErrorObject, { codeMapper } from "../schema/error"
+import { SupabaseClient } from "@supabase/supabase-js"
 
 export default class BaseController {
     tableName: string
     nameSpace: string
+    api: SupabaseClient
 
     constructor(tableName: string, nameSpace: string) {
         this.tableName = tableName
         this.nameSpace = nameSpace
+        this.api = this.nameSpace === 'user' ? supabaseServer : supabase
     }
 
     async get(req:Request, res: Response, next: NextFunction, query?: string) {
@@ -39,12 +42,14 @@ export default class BaseController {
                 return next(err)
             }
          } else {
-            const { data, error } = await supabase.from(this.tableName).select("*").match({id: id})
+            const { data, error } = await this.api.from(this.tableName).select("*").match({id: id})
             if (error) {
                 const err: ErrorObject = {code: 500, error: `${error}`}
                 return next(err)
             }
-            return res.status(200).json(data)
+            if (data.length > 0) return res.status(200).json(data)
+            return res.status(200).json({message: `No ${this.nameSpace} with id ${id} found`})
+            
          }
        }
 
@@ -62,11 +67,13 @@ export default class BaseController {
             return next(error)
         }
 
-        const { data, error } = await supabase.from(this.tableName).insert([body])
+        const { data, error } = await this.api.from(this.tableName).insert([body])
 
         if (error) {
             console.error(error)
-            return next(error)
+            const errCode = codeMapper.get(error.code) ?? 500
+            const err: ErrorObject = {message: error.message, code: errCode, error: error.details}
+            return next(err)
         } else {
             return res.status(200).json({message: `New ${this.nameSpace} created`, data: data[0]})
         }
@@ -80,7 +87,7 @@ export default class BaseController {
             return next(error)
         }
 
-        const { data, error } = await supabase.from(this.tableName)
+        const { data, error } = await this.api.from(this.tableName)
         .update(body)
         .match({id: id})
 
@@ -101,17 +108,14 @@ export default class BaseController {
             return next(error)
         }
 
-        const { data, error } = await supabase.from(this.tableName).delete().match({id: id})
+        const { data, error } = await this.api.from(this.tableName).delete().match({id: id})
 
         if (error) {
             const err: ErrorObject = { message: error.message, code: 400, error: error.details}
             return next(err)
         }
 
-        if (data.length > 0) {
-            return res.status(200).json({message: `${this.nameSpace} successfully deleted`, data: data})
-        } else {
-            return res.status(200).json({message: `No ${this.nameSpace} with id ${id} found`})
-        }
+        if (data.length > 0) return res.status(200).json({message: `${this.nameSpace} successfully deleted`, data: data})
+        return res.status(200).json({message: `No ${this.nameSpace} with id ${id} found`})
     }
 }
