@@ -13,6 +13,10 @@ export const getBatch = async (req: Request, res: Response, next: NextFunction) 
     return await baseControl.get(req, res, next, getBatchQuery())
 }
 
+export const getBatchList = async (req: Request, res: Response, next: NextFunction) => {
+    return await baseControl.get(req, res, next, getBatchQuery())
+}
+
 export const deleteBatch =async (req: Request, res: Response, next: NextFunction) => {
     return await baseControl.delete(req, res, next)
 }

@@ -6,6 +6,7 @@ import { pgInstance } from "../db/pg"
 import parseErrors from "../utils/parse-validation-errors"
 import ErrorObject, { codeMapper } from "../schema/error"
 import { SupabaseClient } from "@supabase/supabase-js"
+import { filter } from "../schema/filter"
 
 export default class BaseController {
     tableName: string
@@ -42,6 +43,15 @@ export default class BaseController {
 
     async get(req:Request, res: Response, next: NextFunction, query?: string) {
        const id = req.params.id
+       const f = req.query 
+       const filters: filter = f
+       const { orderBy, range, rangeFrom: rangeFrom, desc, limit } = filters
+       // clean up filters
+       delete filters.desc
+       delete filters.orderBy
+       delete filters.range
+       delete filters.limit
+       delete filters.rangeFrom
 
        if (id) {
         this._parseUUID(id, next)
@@ -50,7 +60,7 @@ export default class BaseController {
             try {
                 const response = await pgInstance.query(query, [id])
                 if (response.rowCount > 0) {
-                    return res.status(200).json(response.rows)
+                    return res.status(200).json(response.rows[0])
                 } else {
                     return res.status(404).json({message: `Unable to fetch data for given ${this.nameSpace} with id ${id}`})
                 } 
@@ -61,16 +71,32 @@ export default class BaseController {
          } else {
             const { data, error } = await this.api.from(this.tableName).select("*").match({id: id})
             if (error) {
-                const err: ErrorObject = {code: 500, error: `${error}`}
+                const err: ErrorObject = {code: 500, error: error}
                 return next(err)
             }
-            if (data.length > 0) return res.status(200).json(data)
+            if (data.length > 0) return res.status(200).json(data[0])
             return res.status(200).json({message: `No ${this.nameSpace} with id ${id} found`})
-            
          }
-       }
+       } 
 
-       // TODO: add a getList path here
+       // get list of docs using query filters
+       if (!id && Object.keys(filters).length > 0) {
+          const startDate = new Date('2022-01-01').toJSON() // minimum date to query possible data
+          const defaultLimit = 100 
+          const { data, error } = await this.api.from(this.tableName)
+            .select('*')
+            .match({...filters})
+            .order(orderBy || 'id')
+            .gte(range || 'created_at', rangeFrom || `${startDate}`)
+            .limit(limit || defaultLimit)
+
+          if (error) {
+            const err: ErrorObject = {code: 500, error: error.message}
+            return next(err)
+          }
+          return res.status(200).json(data)
+       }
+       return res.status(200).json([]) // return empty list if all checks above fail
     }
 
     async post(req:Request, res: Response, next: NextFunction, schema: ObjectSchema) {
@@ -89,7 +115,7 @@ export default class BaseController {
             }
         }
     }
-    
+
     async patch(req:Request, res: Response, next: NextFunction, columns?: string[]) {
         const id = req.params.id
         const { body } = req
