@@ -1,9 +1,9 @@
 import { Router } from "express"
 import { getUserViaId, createUser, resetPassword, signIn, deleteUser } from "../controllers/user-controller"
-// TODO: edit user ino
+import authenticator from "../middleware/auth/authenticator"
 const userRoute = Router()
 
-userRoute.get("/user/:id", getUserViaId)
+userRoute.get("/user/:id", authenticator, getUserViaId)
 userRoute.post("/user/signup", createUser)
 userRoute.post("/user/reset-password", resetPassword)
 userRoute.put("/user/signin", signIn)
