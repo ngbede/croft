@@ -43,7 +43,7 @@ export default class BaseController {
 
     async get(req:Request, res: Response, next: NextFunction, query?: string) {
        const id = req.params.id
-       const f = req.query 
+       const f = req.query
        const filters: filter = f
        const { orderBy, range, rangeFrom: rangeFrom, desc, limit } = filters
        // clean up filters
