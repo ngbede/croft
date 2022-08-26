@@ -4,7 +4,7 @@ export function getBatchQuery (): string {
         from public.batch as b
         join auth.users as u on b.created_by = u.id
         join public.farms as f on f.id = b.farm_id 
-        where b.farm_id = $1
+        where b.id = $1
     `
     return query
 }
