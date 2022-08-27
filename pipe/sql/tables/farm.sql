@@ -13,6 +13,20 @@ create table farms (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE farm_setting (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    farm_id UUID REFERENCES public.farms(id) ON DELETE CASCADE,
+    crate_price JSONB[] NOT NULL,
+    chicken_price JSONB NOT NULL,
+    eggs_per_crate INTEGER NOT NULL DEFAULT 30,
+    created_by VARCHAR(70),
+    updated_by VARCHAR(70),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE public.farm_setting
+ADD CONSTRAINT one_setting_per_farm UNIQUE (farm_id)
 
 ALTER TABLE public.farms
 ALTER COLUMN id set DEFAULT gen_random_uuid();
