@@ -17,7 +17,6 @@ export const getStock = async (req: Request, res: Response, next: NextFunction) 
     return await stockControl.get(req, res, next, getStockInfo())
 }
 
-// TODO: refactor this to work with patch
 export const updateStock = async (req: Request, res: Response, next: NextFunction) => {
     return await stockControl.patch(req, res, next)
 }
