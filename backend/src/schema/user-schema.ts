@@ -7,7 +7,8 @@ export const userSchema = joi.object({
     password: joi.string().min(8).required(),
     phone_number: joi.string().max(18).required(),
     phone_number2: joi.string().max(18).default(null),
-    date_of_birth: joi.date().required()
+    date_of_birth: joi.date(),
+    role: joi.string().required()
 })
 
 export interface user {
@@ -17,5 +18,6 @@ export interface user {
     password: string,
     phone_number: string,
     phone_number2: string | null,
-    date_of_birth: string
+    date_of_birth: string,
+    role: string
 }
