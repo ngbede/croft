@@ -1,32 +1,31 @@
-import {Pool, PoolClient, QueryResult} from "pg"
-import { params } from "./pg-client"
-
+import { Pool, PoolClient, QueryResult } from 'pg'
+import { params } from './pg-client'
 
 export class Pg {
-    params: object // connection params
-    _pool: Pool
-    
-    constructor (params: object) {
-        this.params = params
-    }
+  params: object // connection params
+  _pool: Pool
 
-    connect (): Promise<PoolClient> {
-        this._pool = new Pool(this.params)
-        return this._pool.connect()
-    }
+  constructor(params: object) {
+    this.params = params
+  }
 
-    disconnect (): Promise<void> {
-        return this._pool.end()
-    }
+  connect(): Promise<PoolClient> {
+    this._pool = new Pool(this.params)
+    return this._pool.connect()
+  }
 
-    async query (queryString: string, queryParams: Array<String>) {
-        try{
-            const q: QueryResult = await this._pool.query(queryString, queryParams)
-            return q
-        } catch (e: any) {
-            throw new Error(`${e}`)
-        }
+  disconnect(): Promise<void> {
+    return this._pool.end()
+  }
+
+  async query(queryString: string, queryParams: Array<String>) {
+    try {
+      const q: QueryResult = await this._pool.query(queryString, queryParams)
+      return q
+    } catch (e: any) {
+      throw new Error(`${e}`)
     }
+  }
 }
 
 // create new instance

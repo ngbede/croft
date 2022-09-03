@@ -19,7 +19,6 @@ ADD COLUMN chicken_count JSONB[];
 
 -- ALTER TABLE public.stock_report
 -- DROP COLUMN type;
-
 -- ALTER TABLE stock_report
 -- ADD COLUMN type VARCHAR(20) NOT NULL;
 
