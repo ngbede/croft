@@ -1,4 +1,4 @@
-require("dotenv/config")
+import 'dotenv/config'
 
 export const params: object = {
   user: process.env.user,
@@ -8,5 +8,5 @@ export const params: object = {
   port: parseInt(process.env.dbPort!),
   max: 30,
   idleTimeoutMillis: 300000,
-  connectionTimeoutMillis: 60000
+  connectionTimeoutMillis: 60000,
 }
