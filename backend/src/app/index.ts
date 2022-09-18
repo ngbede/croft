@@ -9,6 +9,7 @@ import stockRouter from '../routes/stock'
 import settingsRouter from '../routes/settings'
 import errorHandle from '../middleware/error-handle'
 import { noRoute } from '../middleware/no-route'
+import orderRouter from '../routes/order'
 const cors = require('cors')
 
 const app = express()
@@ -25,6 +26,7 @@ app.use(baseUri, farmRouter)
 app.use(baseUri, batchRouter)
 app.use(baseUri, stockRouter)
 app.use(baseUri, settingsRouter)
+app.use(baseUri, orderRouter)
 app.use(noRoute)
 app.use(errorHandle)
 

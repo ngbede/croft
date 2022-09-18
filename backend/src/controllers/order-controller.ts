@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from 'express'
 import { orderSchema } from '../schema/order-schema'
-import BaseController from './base-controller'
+import OrderController from './order-module/controller'
 
-const baseControl: BaseController = new BaseController('orders', 'order')
+const orderControl: OrderController = new OrderController('orders', 'order')
 
 export const createOrder = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  return await baseControl.post(req, res, next, orderSchema)
+  return await orderControl.post(req, res, next, orderSchema)
 }
 
 export const getOrder = async (
@@ -17,7 +17,7 @@ export const getOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  return await baseControl.get(req, res, next)
+  return await orderControl.get(req, res, next)
 }
 
 export const updateOrder = async (
@@ -25,5 +25,5 @@ export const updateOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  return await baseControl.patch(req, res, next)
+  return await orderControl.patch(req, res, next)
 }
