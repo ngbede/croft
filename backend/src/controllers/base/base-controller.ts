@@ -20,12 +20,13 @@ export default class BaseController {
   }
 
   // helper methods prefixed with _
-  _parseUUID(id: string, next: NextFunction) {
+  _parseUUID(id: string, next: NextFunction): boolean | void {
     const isValidUUID = validator.isUUID(id)
     if (!isValidUUID) {
       const error: ErrorObject = { message: 'Invalid uuid sent', code: 404 }
-      return next(error)
+      next(error)
     }
+    return isValidUUID
   }
 
   _validateBody(body: any, next: NextFunction, schema: ObjectSchema): boolean {
@@ -47,7 +48,7 @@ export default class BaseController {
     return valid
   }
 
-  _rejectPatchColumns(reqBody: any, next: NextFunction, invalidCols?: string[]) {
+  _rejectPatchColumns(reqBody: any, next: NextFunction, invalidCols?: string[]): boolean {
     const bodyKeys: string[] = Object.keys(reqBody)
     const columns: string[] = ['id', 'order_id', 'total_amount'].concat(invalidCols || [])
     let invalidReq = bodyKeys.some(el => columns.includes(el))
@@ -59,6 +60,7 @@ export default class BaseController {
       }
       next(error)
     }
+    return !invalidReq
   }
 
   async get(req: Request, res: Response, next: NextFunction, query?: string) {
@@ -74,7 +76,7 @@ export default class BaseController {
     delete filters.rangeFrom
 
     if (id) {
-      this._parseUUID(id, next)
+      if (!this._parseUUID(id, next)) return
       // run custom queries directly on PG
       if (query) {
         try {
@@ -163,8 +165,10 @@ export default class BaseController {
   ) {
     const id = req.params.id
     const { body } = req
-    this._parseUUID(id, next)
-    this._rejectPatchColumns(body, next, columns)
+
+    // reject request process if validation pipe fails
+    if (!this._parseUUID(id, next)) return
+    if (!this._rejectPatchColumns(body, next, columns)) return
 
     const { data, error } = await this.supabase
       .from(this.tableName)
@@ -187,7 +191,7 @@ export default class BaseController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id
-    this._parseUUID(id, next)
+    if (!this._parseUUID(id, next)) return
 
     const { data, error } = await this.supabase
       .from(this.tableName)

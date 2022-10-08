@@ -48,8 +48,10 @@ export default class OrderController extends BaseController {
   ) {
     const id = req.params.id
     let body = req.body as order
-    this._parseUUID(id, next)
-    this._rejectPatchColumns(body, next)
+
+    // exit request when any of data validation pipes fail
+    if (!this._parseUUID(id, next)) return
+    if (!this._rejectPatchColumns(body, next)) return
 
     if (body.status === OrderStatus.rejected) {
       body = rejectOrder(body, req.user?.id || 'null')
