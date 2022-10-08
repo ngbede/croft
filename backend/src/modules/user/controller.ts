@@ -32,7 +32,7 @@ export default class UserController extends BaseController {
 
   async get(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id
-    this._parseUUID(id, next)
+    if (!this._parseUUID(id, next)) return
 
     const { data, error } = await this.supabase.auth.api.getUserById(id)
 
