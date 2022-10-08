@@ -1,6 +1,6 @@
 import { userSchema } from '../schema/user-schema'
 import { Request, Response, NextFunction } from 'express'
-import UserController from './user-module/controller'
+import UserController from '../modules/user/controller'
 
 const userControl: UserController = new UserController('user')
 

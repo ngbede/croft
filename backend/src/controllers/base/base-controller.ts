@@ -1,22 +1,22 @@
 import { Request, Response, NextFunction } from 'express'
 import { ObjectSchema } from 'joi'
 import validator from 'validator'
-import { supabase, supabaseServer } from '../db/init'
-import { pgInstance } from '../db/pg'
-import parseErrors from '../utils/parse-validation-errors'
-import ErrorObject, { codeMapper } from '../schema/error'
+import { supabase, supabaseServer } from '../../db/init'
+import { pgInstance } from '../../db/pg'
+import parseErrors from '../../utils/parse-validation-errors'
+import ErrorObject, { codeMapper } from '../../schema/error'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { filter } from '../schema/filter'
+import { filter } from '../../schema/filter'
 
 export default class BaseController {
   tableName: string
   nameSpace: string
-  api: SupabaseClient
+  supabase: SupabaseClient
 
   constructor(tableName: string, nameSpace?: string) {
     this.tableName = tableName
     this.nameSpace = nameSpace || tableName
-    this.api = this.nameSpace === 'user' ? supabaseServer : supabase
+    this.supabase = this.nameSpace === 'user' ? supabaseServer : supabase
   }
 
   // helper methods prefixed with _
@@ -45,6 +45,20 @@ export default class BaseController {
       next(error)
     }
     return valid
+  }
+
+  _rejectPatchColumns(reqBody: any, next: NextFunction, invalidCols?: string[]) {
+    const bodyKeys: string[] = Object.keys(reqBody)
+    const columns: string[] = ['id', 'order_id', 'total_amount'].concat(invalidCols || [])
+    let invalidReq = bodyKeys.some(el => columns.includes(el))
+    if (invalidReq) {
+      const error: ErrorObject = {
+        message: 'Invalid request, cant update specified columns in request body',
+        code: 404,
+        error: columns
+      }
+      next(error)
+    }
   }
 
   async get(req: Request, res: Response, next: NextFunction, query?: string) {
@@ -77,7 +91,7 @@ export default class BaseController {
           return next(err)
         }
       } else {
-        const { data, error } = await this.api
+        const { data, error } = await this.supabase
           .from(this.tableName)
           .select('*')
           .match({ id: id })
@@ -96,7 +110,7 @@ export default class BaseController {
     if (!id && Object.keys(filters).length > 0) {
       const startDate = new Date('2022-01-01').toJSON() // minimum date to query possible data
       const defaultLimit = 100
-      const { data, error } = await this.api
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .match({ ...filters })
@@ -124,7 +138,7 @@ export default class BaseController {
     const valid: boolean = this._validateBody(body, next, schema)
 
     if (valid) {
-      const { data, error } = await this.api.from(this.tableName).insert([body])
+      const { data, error } = await this.supabase.from(this.tableName).insert([body])
       if (error) {
         const errCode = codeMapper.get(error.code) ?? 500
         const err: ErrorObject = {
@@ -145,13 +159,14 @@ export default class BaseController {
     req: Request,
     res: Response,
     next: NextFunction,
-    columns?: string[]
+    columns?: string[] // columns to exclude from patch update
   ) {
     const id = req.params.id
     const { body } = req
     this._parseUUID(id, next)
+    this._rejectPatchColumns(body, next, columns)
 
-    const { data, error } = await this.api
+    const { data, error } = await this.supabase
       .from(this.tableName)
       .update({ ...body, updated_at: new Date().toJSON() })
       .match({ id: id })
@@ -174,7 +189,7 @@ export default class BaseController {
     const id = req.params.id
     this._parseUUID(id, next)
 
-    const { data, error } = await this.api
+    const { data, error } = await this.supabase
       .from(this.tableName)
       .delete()
       .match({ id: id })

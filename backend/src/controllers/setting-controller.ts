@@ -1,4 +1,4 @@
-import BaseController from './base-controller'
+import BaseController from './base/base-controller'
 import { Request, Response, NextFunction } from 'express'
 import { settingSchema } from '../schema/setting-schema'
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { orderSchema } from '../schema/order-schema'
-import OrderController from './order-module/controller'
+import OrderController from '../modules/order/controller'
 
 const orderControl: OrderController = new OrderController('orders', 'order')
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { farmSchema } from '../schema/farm-schema'
-import BaseController from './base-controller'
+import BaseController from './base/base-controller'
 
 const baseControl: BaseController = new BaseController('farms', 'farm')
 
