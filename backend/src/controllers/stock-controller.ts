@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { stockSchema } from '../schema/stock-schema'
 import { getStockInfo } from '../queries/stock-queries'
-import StockController from './stock-module/controller'
+import StockController from '../modules/stock/controller'
 
 const stockControl: StockController = new StockController(
   'stock_report',

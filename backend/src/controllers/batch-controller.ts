@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { batchSchema } from '../schema/batch-schema'
 import { getBatchQuery } from '../queries/batch-queries'
-import BaseController from './base-controller'
+import BaseController from './base/base-controller'
 
 const baseControl: BaseController = new BaseController('batch')
 

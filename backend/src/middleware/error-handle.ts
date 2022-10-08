@@ -7,6 +7,7 @@ const errorHandle = (
   res: Response,
   next: NextFunction
 ) => {
+  // TODO: there is a weired error that happens here, watch this space
   const stringifyErr: string = error.code.toString()
 
   if (stringifyErr.startsWith('5')) {

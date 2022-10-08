@@ -30,6 +30,9 @@ export interface order {
   items: object
   total_amount: number
   note: string | null
+  is_complete: boolean
+  closed_by: string | null
+  closed_at: string | null
   created_by: string
   updated_by: string
 }

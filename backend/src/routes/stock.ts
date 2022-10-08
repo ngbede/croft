@@ -9,6 +9,7 @@ import {
 
 const stockRouter = Router()
 
+stockRouter.get('/stock', authenticator, getStock)
 stockRouter.get('/stock/:id', authenticator, getStock) // get stock by its id
 stockRouter.post('/stock/create', authenticator, createStock)
 stockRouter.patch('/stock/:id', authenticator, updateStock)

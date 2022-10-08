@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { ObjectSchema } from 'joi'
 import { stock } from '../../schema/stock-schema'
-import BaseController from '../base-controller'
+import BaseController from '../../controllers/base/base-controller'
 import { farm } from '../../schema/farm-schema'
 import { createStockID } from '../../api/write/stock-id'
 import ErrorObject, { codeMapper } from '../../schema/error'
@@ -22,7 +22,7 @@ export default class StockController extends BaseController {
     const valid: boolean = this._validateBody(stock, next, schema)
 
     if (valid) {
-      const { data, error } = await this.api
+      const { data, error } = await this.supabase
         .from<farm>('farms')
         .select('name')
         .match({ id: stock.farm_id })
@@ -33,7 +33,7 @@ export default class StockController extends BaseController {
       // TODO: check this stuff could be null
       const name = data![0].name
       const [stockID, created_at] = createStockID(name)
-      const { data: newStock, error: err } = await this.api
+      const { data: newStock, error: err } = await this.supabase
         .from<stock>('stock_report')
         .insert([
           {
