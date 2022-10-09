@@ -49,7 +49,6 @@ export default class BaseController {
   }
 
   async _runCustomQuery(query: string, args: string[], res: Response, next: NextFunction, listOfJson?: boolean) {
-    console.log(query)
     try {
       const response = await pgInstance.query(query, args)
       if (response.rowCount > 0) {
