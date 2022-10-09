@@ -1,4 +1,4 @@
-export function getFarmDetailQuery(): string {
+export function getFarmDetailQuery(list?: boolean): string {
     const query = `
         WITH farm_batch AS (
             SELECT farm_id,
@@ -25,7 +25,7 @@ export function getFarmDetailQuery(): string {
             LEFT JOIN public.farm_setting s ON f.id = s.farm_id
             LEFT JOIN farm_batch fb ON fb.farm_id = f.id
             LEFT JOIN farm_staff fs ON fs.farm_id = f.id
-        WHERE f.id = $1
+        ${list ? '' : ' WHERE f.id = $1'}
         `
     return query
 }
