@@ -115,7 +115,7 @@ export default class BaseController {
     // then simply run the query provided
     // please ensure custom query is properly written to avoid any issue with data
     // TODO: figure out how to parse the args properly
-    if (query && (!id && Object.keys(filters).length > 0)) return this._runCustomQuery(query, [], res, next, true)
+    if (query && (!id && Object.keys(filters).length === 0)) return this._runCustomQuery(query, [], res, next, true)
 
     // get list of docs using query filters
     // this doesn't handle getting data via any custom query, will need to think that through
