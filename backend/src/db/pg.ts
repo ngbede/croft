@@ -18,7 +18,7 @@ export class Pg {
     return this._pool.end()
   }
 
-  async query(queryString: string, queryParams: Array<String>) {
+  async query(queryString: string, queryParams?: Array<String>) {
     try {
       const q: QueryResult = await this._pool.query(queryString, queryParams)
       return q
