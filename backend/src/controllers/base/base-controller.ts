@@ -48,6 +48,23 @@ export default class BaseController {
     return valid
   }
 
+  async _runCustomQuery(query: string, args: string[], res: Response, next: NextFunction, listOfJson?: boolean) {
+    console.log(query)
+    try {
+      const response = await pgInstance.query(query, args)
+      if (response.rowCount > 0) {
+        return res.status(200).json(listOfJson ? response.rows : response.rows[0])
+      } else {
+        return res.status(404).json({
+          message: `Unable to fetch data for given ${this.nameSpace}`,
+        })
+      }
+    } catch (error: any) {
+      const err: ErrorObject = { code: 500, error: `${error}` }
+      return next(err)
+    }
+  }
+
   _rejectPatchColumns(reqBody: any, next: NextFunction, invalidCols?: string[]): boolean {
     const bodyKeys: string[] = Object.keys(reqBody)
     const columns: string[] = ['id', 'order_id', 'total_amount'].concat(invalidCols || [])
@@ -77,38 +94,31 @@ export default class BaseController {
 
     if (id) {
       if (!this._parseUUID(id, next)) return
-      // run custom queries directly on PG
-      if (query) {
-        try {
-          const response = await pgInstance.query(query, [id])
-          if (response.rowCount > 0) {
-            return res.status(200).json(response.rows[0])
-          } else {
-            return res.status(404).json({
-              message: `Unable to fetch data for given ${this.nameSpace} with id ${id}`,
-            })
-          }
-        } catch (error: any) {
-          const err: ErrorObject = { code: 500, error: `${error}` }
-          return next(err)
-        }
-      } else {
-        const { data, error } = await this.supabase
-          .from(this.tableName)
-          .select('*')
-          .match({ id: id })
-        if (error) {
-          const err: ErrorObject = { code: 500, error: error }
-          return next(err)
-        }
-        if (data.length > 0) return res.status(200).json(data[0])
-        return res
-          .status(200)
-          .json({ message: `No ${this.nameSpace} with id ${id} found` })
+      if (query) return this._runCustomQuery(query, [id], res, next)
+
+      // continue with regular data fetching using id via supabase client
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .select('*')
+        .match({ id: id })
+      if (error) {
+        const err: ErrorObject = { code: 500, error: error }
+        return next(err)
       }
+      if (data.length > 0) return res.status(200).json(data[0])
+      return res
+        .status(200)
+        .json({ message: `No ${this.nameSpace} with id ${id} found` })
     }
 
+    // if there is a custom query and no id or filter list is given in request
+    // then simply run the query provided
+    // please ensure custom query is properly written to avoid any issue with data
+    // TODO: figure out how to parse the args properly
+    if (query && (!id && Object.keys(filters).length > 0)) return this._runCustomQuery(query, [], res, next, true)
+
     // get list of docs using query filters
+    // this doesn't handle getting data via any custom query, will need to think that through
     if (!id && Object.keys(filters).length > 0) {
       const startDate = new Date('2022-01-01').toJSON() // minimum date to query possible data
       const defaultLimit = 100
