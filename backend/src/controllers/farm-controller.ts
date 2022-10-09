@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { getFarmDetailQuery } from '../queries/farm-query'
 import { farmSchema } from '../schema/farm-schema'
 import BaseController from './base/base-controller'
 
@@ -9,7 +10,7 @@ export const getFarm = async (
   res: Response,
   next: NextFunction
 ) => {
-  return await baseControl.get(req, res, next)
+  return await baseControl.get(req, res, next, getFarmDetailQuery())
 }
 
 export const registerFarm = async (
