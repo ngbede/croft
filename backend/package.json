@@ -4,7 +4,7 @@
   "description": "Croft's backend src code using an API first approach.",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf build && tsc",
     "preserve": "npm run build",
     "serve": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q build/server.js\"",
     "prestart": "npm run build",
