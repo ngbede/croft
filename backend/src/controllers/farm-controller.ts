@@ -9,6 +9,10 @@ export const getFarm = async (req: Request, res: Response, next: NextFunction) =
   return await baseControl.get(req, res, next, getFarmDetailQuery())
 }
 
+export const getFarmList = async (req: Request, res: Response, next: NextFunction) => {
+  return await baseControl.get(req, res, next, getFarmDetailQuery(true))
+}
+
 export const registerFarm = async (req: Request, res: Response, next: NextFunction) => {
   return await baseControl.post(req, res, next, farmSchema)
 }
