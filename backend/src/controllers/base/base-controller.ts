@@ -1,31 +1,32 @@
 import { Request, Response, NextFunction } from 'express'
 import { ObjectSchema } from 'joi'
 import validator from 'validator'
-import { supabase, supabaseServer } from '../db/init'
-import { pgInstance } from '../db/pg'
-import parseErrors from '../utils/parse-validation-errors'
-import ErrorObject, { codeMapper } from '../schema/error'
+import { supabase, supabaseServer } from '../../db/init'
+import { pgInstance } from '../../db/pg'
+import parseErrors from '../../utils/parse-validation-errors'
+import ErrorObject, { codeMapper } from '../../schema/error'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { filter } from '../schema/filter'
+import { filter } from '../../schema/filter'
 
 export default class BaseController {
   tableName: string
   nameSpace: string
-  api: SupabaseClient
+  supabase: SupabaseClient
 
   constructor(tableName: string, nameSpace?: string) {
     this.tableName = tableName
     this.nameSpace = nameSpace || tableName
-    this.api = this.nameSpace === 'user' ? supabaseServer : supabase
+    this.supabase = this.nameSpace === 'user' ? supabaseServer : supabase
   }
 
   // helper methods prefixed with _
-  _parseUUID(id: string, next: NextFunction) {
+  _parseUUID(id: string, next: NextFunction): boolean | void {
     const isValidUUID = validator.isUUID(id)
     if (!isValidUUID) {
       const error: ErrorObject = { message: 'Invalid uuid sent', code: 404 }
-      return next(error)
+      next(error)
     }
+    return isValidUUID
   }
 
   _validateBody(body: any, next: NextFunction, schema: ObjectSchema): boolean {
@@ -47,6 +48,37 @@ export default class BaseController {
     return valid
   }
 
+  async _runCustomQuery(query: string, args: string[], res: Response, next: NextFunction, listOfJson?: boolean) {
+    try {
+      const response = await pgInstance.query(query, args)
+      if (response.rowCount > 0) {
+        return res.status(200).json(listOfJson ? response.rows : response.rows[0])
+      } else {
+        return res.status(404).json({
+          message: `Unable to fetch data for given ${this.nameSpace}`,
+        })
+      }
+    } catch (error: any) {
+      const err: ErrorObject = { code: 500, error: `${error}` }
+      return next(err)
+    }
+  }
+
+  _rejectPatchColumns(reqBody: any, next: NextFunction, invalidCols?: string[]): boolean {
+    const bodyKeys: string[] = Object.keys(reqBody)
+    const columns: string[] = ['id', 'order_id', 'total_amount'].concat(invalidCols || [])
+    let invalidReq = bodyKeys.some(el => columns.includes(el))
+    if (invalidReq) {
+      const error: ErrorObject = {
+        message: 'Invalid request, cant update specified columns in request body',
+        code: 404,
+        error: columns
+      }
+      next(error)
+    }
+    return !invalidReq
+  }
+
   async get(req: Request, res: Response, next: NextFunction, query?: string) {
     const id = req.params.id
     const f = req.query
@@ -60,43 +92,36 @@ export default class BaseController {
     delete filters.rangeFrom
 
     if (id) {
-      this._parseUUID(id, next)
-      // run custom queries directly on PG
-      if (query) {
-        try {
-          const response = await pgInstance.query(query, [id])
-          if (response.rowCount > 0) {
-            return res.status(200).json(response.rows[0])
-          } else {
-            return res.status(404).json({
-              message: `Unable to fetch data for given ${this.nameSpace} with id ${id}`,
-            })
-          }
-        } catch (error: any) {
-          const err: ErrorObject = { code: 500, error: `${error}` }
-          return next(err)
-        }
-      } else {
-        const { data, error } = await this.api
-          .from(this.tableName)
-          .select('*')
-          .match({ id: id })
-        if (error) {
-          const err: ErrorObject = { code: 500, error: error }
-          return next(err)
-        }
-        if (data.length > 0) return res.status(200).json(data[0])
-        return res
-          .status(200)
-          .json({ message: `No ${this.nameSpace} with id ${id} found` })
+      if (!this._parseUUID(id, next)) return
+      if (query) return this._runCustomQuery(query, [id], res, next)
+
+      // continue with regular data fetching using id via supabase client
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .select('*')
+        .match({ id: id })
+      if (error) {
+        const err: ErrorObject = { code: 500, error: error }
+        return next(err)
       }
+      if (data.length > 0) return res.status(200).json(data[0])
+      return res
+        .status(200)
+        .json({ message: `No ${this.nameSpace} with id ${id} found` })
     }
 
+    // if there is a custom query and no id or filter list is given in request
+    // then simply run the query provided
+    // please ensure custom query is properly written to avoid any issue with data
+    // TODO: figure out how to parse the args properly
+    if (query && (!id && Object.keys(filters).length === 0)) return this._runCustomQuery(query, [], res, next, true)
+
     // get list of docs using query filters
+    // this doesn't handle getting data via any custom query, will need to think that through
     if (!id && Object.keys(filters).length > 0) {
       const startDate = new Date('2022-01-01').toJSON() // minimum date to query possible data
       const defaultLimit = 100
-      const { data, error } = await this.api
+      const { data, error } = await this.supabase
         .from(this.tableName)
         .select('*')
         .match({ ...filters })
@@ -124,7 +149,7 @@ export default class BaseController {
     const valid: boolean = this._validateBody(body, next, schema)
 
     if (valid) {
-      const { data, error } = await this.api.from(this.tableName).insert([body])
+      const { data, error } = await this.supabase.from(this.tableName).insert([body])
       if (error) {
         const errCode = codeMapper.get(error.code) ?? 500
         const err: ErrorObject = {
@@ -145,13 +170,16 @@ export default class BaseController {
     req: Request,
     res: Response,
     next: NextFunction,
-    columns?: string[]
+    columns?: string[] // columns to exclude from patch update
   ) {
     const id = req.params.id
     const { body } = req
-    this._parseUUID(id, next)
 
-    const { data, error } = await this.api
+    // reject request process if validation pipe fails
+    if (!this._parseUUID(id, next)) return
+    if (!this._rejectPatchColumns(body, next, columns)) return
+
+    const { data, error } = await this.supabase
       .from(this.tableName)
       .update({ ...body, updated_at: new Date().toJSON() })
       .match({ id: id })
@@ -172,9 +200,9 @@ export default class BaseController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id
-    this._parseUUID(id, next)
+    if (!this._parseUUID(id, next)) return
 
-    const { data, error } = await this.api
+    const { data, error } = await this.supabase
       .from(this.tableName)
       .delete()
       .match({ id: id })

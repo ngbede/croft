@@ -5,3 +5,5 @@ tsconfig.tsbuildinfo
 node_modules
 ca-certificate.crt
 build
+croft-db.session.sql
+/yarn.lock
