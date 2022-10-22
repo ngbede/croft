@@ -1,15 +1,15 @@
 export enum FarmRoles {
-  stockReport = "stock-report",
-  createBatch = "create-batch",
-  editBatch = "edit-batch",
-  deleteBatch = "delete-batch",
-  manageUser = "manage-user",
-  orders = "orders",
+  stockReport = 'stock-report',
+  createBatch = 'create-batch',
+  editBatch = 'edit-batch',
+  deleteBatch = 'delete-batch',
+  manageUser = 'manage-user',
+  orders = 'orders',
 }
 
 export const roles = new Map<string, string[]>([
   [
-    "owner",
+    'owner',
     [
       FarmRoles.createBatch,
       FarmRoles.deleteBatch,
@@ -19,37 +19,37 @@ export const roles = new Map<string, string[]>([
     ],
   ],
   [
-    "employee",
+    'employee',
     [FarmRoles.stockReport, FarmRoles.createBatch, FarmRoles.editBatch],
   ],
-  ["distributor", [FarmRoles.orders]],
-]);
+  ['distributor', [FarmRoles.orders]],
+])
 
 export enum StockTypes {
-  eggCount = "egg-count",
-  chickenCount = "chicken-count",
+  eggCount = 'egg-count',
+  chickenCount = 'chicken-count',
 }
 
 export enum StockOperations {
-  add = "add",
-  delete = "delete",
+  add = 'add',
+  delete = 'delete',
 }
 
 export enum OrderStatus {
-  request = "request", // from a normal user
-  rejected = "rejected", // farm can either reject
-  accepted = "accepted", // or accept the order request
+  request = 'request', // from a normal user
+  rejected = 'rejected', // farm can either reject
+  accepted = 'accepted', // or accept the order request
   // create a new snapshot of the order from packed
-  packed = "packed", // if accepted farm should get the items listed in order packed & ready.
+  packed = 'packed', // if accepted farm should get the items listed in order packed & ready.
 
   // transit status subtracts from the farms current stock
-  transit = "in-transit", // at this point, once in transit we should have an estimate of when the items will arrive at their destination.
-  received = "received", // the items have reached final destination and the order is finally complete
+  transit = 'in-transit', // at this point, once in transit we should have an estimate of when the items will arrive at their destination.
+  received = 'received', // the items have reached final destination and the order is finally complete
 }
 
 export const userRoles: IUserRoles = {
   owner: {
-    role: "owner",
+    role: 'owner',
     roles: [
       FarmRoles.createBatch,
       FarmRoles.deleteBatch,
@@ -59,32 +59,32 @@ export const userRoles: IUserRoles = {
     ],
   },
   employee: {
-    role: "employee",
+    role: 'employee',
     roles: [FarmRoles.stockReport, FarmRoles.createBatch, FarmRoles.editBatch],
   },
   distributor: {
-    role: "distributor",
+    role: 'distributor',
     roles: [FarmRoles.orders],
   },
-};
+}
 
 interface IAppUserRole {
-  role: "owner" | "employee" | "distributor";
-  roles: FarmRoles[];
+  role: 'owner' | 'employee' | 'distributor'
+  roles: FarmRoles[]
 }
 
 type ownerRole = {
-  owner: IAppUserRole;
-};
+  owner: IAppUserRole
+}
 type employeeRole = {
-  employee: IAppUserRole;
-};
+  employee: IAppUserRole
+}
 type distributorRole = {
-  distributor: IAppUserRole;
-};
+  distributor: IAppUserRole
+}
 
-type IUserRoles = ownerRole & employeeRole & distributorRole;
+type IUserRoles = ownerRole & employeeRole & distributorRole
 
-export type IUserRole = ownerRole | employeeRole | distributorRole;
+export type IUserRole = ownerRole | employeeRole | distributorRole
 
-export type IRoles = "owner" | "employee" | "distributor";
+export type IRoles = 'owner' | 'employee' | 'distributor'
