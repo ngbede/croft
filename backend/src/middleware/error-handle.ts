@@ -9,7 +9,8 @@ const errorHandle = (
 ) => {
   console.error(error)
   // TODO: there is a weired error that happens here, watch this space
-  const stringifyErr: string = error.code ? error.code.toString() : '500'
+  const err: number = error.code || 500
+  const stringifyErr: string = err.toString()
 
   if (stringifyErr.startsWith('5')) {
     delete error.error
