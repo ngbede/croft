@@ -9,5 +9,5 @@ export default interface ErrorObject {
 // in case you encounter any, please add here
 export const codeMapper = new Map<string, number>([
   ['23505', 409],
-  ['23503', 409],
+  ['23502', 409],
 ])

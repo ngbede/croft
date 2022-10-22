@@ -7,9 +7,12 @@ const errorHandle = (
   res: Response,
   next: NextFunction
 ) => {
-  const stringifyErr: string = error.code.toString()
+  console.error(error)
+  // TODO: there is a weired error that happens here, watch this space
+  const stringifyErr: string = error.code ? error.code.toString() : '500'
 
   if (stringifyErr.startsWith('5')) {
+    delete error.error
     error.message = 'Internal server error'
   } else if (!error.message && stringifyErr.startsWith('4')) {
     error.message = 'Invalid request sent, check request params & body'

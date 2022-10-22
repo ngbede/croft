@@ -1,7 +1,7 @@
 import validator from 'validator'
 import { user } from '../../schema/user-schema'
 import { Request, Response, NextFunction } from 'express'
-import BaseController from '../base-controller'
+import BaseController from '../../controllers/base/base-controller'
 import ErrorObject from '../../schema/error'
 import { ObjectSchema } from 'joi'
 import { User } from '@supabase/supabase-js'
@@ -22,7 +22,7 @@ export default class UserController extends BaseController {
   }
 
   async _listUsers(next: NextFunction) {
-    const { data, error } = await this.api.auth.api.listUsers()
+    const { data, error } = await this.supabase.auth.api.listUsers()
     if (error) {
       const err: ErrorObject = { message: error.message, code: error.status }
       next(err)
@@ -32,9 +32,9 @@ export default class UserController extends BaseController {
 
   async get(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id
-    this._parseUUID(id, next)
+    if (!this._parseUUID(id, next)) return
 
-    const { data, error } = await this.api.auth.api.getUserById(id)
+    const { data, error } = await this.supabase.auth.api.getUserById(id)
 
     if (error) {
       const err: ErrorObject = { message: error.message, code: error.status }
@@ -58,7 +58,7 @@ export default class UserController extends BaseController {
     const valid: boolean = this._validateBody(newUser, next, schema)
 
     if (valid) {
-      const { user, error } = await this.api.auth.api.createUser({
+      const { user, error } = await this.supabase.auth.api.createUser({
         email: newUser.email,
         password: newUser.password,
         user_metadata: {
@@ -78,7 +78,7 @@ export default class UserController extends BaseController {
       }
 
       // TODO: figure out a way to add this to a queue using digital ocean functions
-      await this.api.auth.api.sendMagicLinkEmail(newUser.email, {
+      await this.supabase.auth.api.sendMagicLinkEmail(newUser.email, {
         shouldCreateUser: false,
       })
       return res.status(200).json(user)
@@ -93,7 +93,7 @@ export default class UserController extends BaseController {
       const allUsers: User[] = await this._listUsers(next)
       const exist = this._userExist(userObject.email, allUsers)
       if (exist) {
-        const { error } = await this.api.auth.api.resetPasswordForEmail(
+        const { error } = await this.supabase.auth.api.resetPasswordForEmail(
           userObject.email
         )
         if (error) {
@@ -117,7 +117,7 @@ export default class UserController extends BaseController {
 
     // if (!userObject.email || !userObject.password) return res.status(400).json({message: "Both email & password is required"})
 
-    const { data, error } = await this.api.auth.api.signInWithEmail(
+    const { data, error } = await this.supabase.auth.api.signInWithEmail(
       userObject.email,
       userObject.password
     )
@@ -127,16 +127,14 @@ export default class UserController extends BaseController {
       const err: ErrorObject = { message: error.message, code: error.status }
       return next(err)
     }
-    const { data: d, error: e } = await this.api.auth.api.inviteUserByEmail(
+    const { data: d, error: e } = await this.supabase.auth.api.inviteUserByEmail(
       'emma.ngbede.sule@gmail.com',
       { data: { fish: 'lol, nigeria' } }
     )
-    await this.api.auth.api.resetPasswordForEmail('emma.ngbede.sule@gmail.com')
-    console.log(d)
-    console.log(e)
+    await this.supabase.auth.api.resetPasswordForEmail('emma.ngbede.sule@gmail.com')
     return res.status(200).json(data)
   }
 
   // could require some more thinking
-  async closeAccount() {}
+  async closeAccount() { }
 }
