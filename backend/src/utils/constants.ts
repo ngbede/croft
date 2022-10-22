@@ -1,0 +1,1 @@
+export const userDetailTable = 'user_detail'

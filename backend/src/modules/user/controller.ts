@@ -6,6 +6,7 @@ import ErrorObject from '../../schema/error'
 import { ObjectSchema } from 'joi'
 import { User } from '@supabase/supabase-js'
 import { roles } from '../../schema/enums'
+import { userDetailTable } from '../../utils/constants'
 
 export default class UserController extends BaseController {
   constructor(tableName: string, nameSpace?: string) {
@@ -60,17 +61,14 @@ export default class UserController extends BaseController {
     if (valid) {
       const { user, error } = await this.supabase.auth.api.createUser({
         email: newUser.email,
-        password: newUser.password,
-        user_metadata: {
-          first_name: newUser.first_name,
-          last_name: newUser.last_name,
-          phone_number: newUser.phone_number,
-          phone_number2: newUser.phone_number2,
-          date_of_birth: newUser.date_of_birth,
-          user_role: newUser.role,
-          roles: roles.get(newUser.role.toLowerCase()),
-        },
+        password: newUser.password
       })
+
+      newUser.roles = roles.get(newUser.user_role.toLowerCase()) // get default user_role list
+      newUser.uuid = user?.id
+      delete newUser.email
+      delete newUser.password
+      const { data, error: err } = await this.supabase.from(userDetailTable).insert([newUser])
 
       if (error) {
         const err: ErrorObject = { message: error.message, code: error.status }
@@ -78,23 +76,23 @@ export default class UserController extends BaseController {
       }
 
       // TODO: figure out a way to add this to a queue using digital ocean functions
-      await this.supabase.auth.api.sendMagicLinkEmail(newUser.email, {
+      await this.supabase.auth.api.sendMagicLinkEmail(newUser.email!, {
         shouldCreateUser: false,
       })
-      return res.status(200).json(user)
+      return res.status(200).json({ ...user, user_detail: data })
     }
   }
 
   async passwordReset(req: Request, res: Response, next: NextFunction) {
     const userObject: user = req.body
-    const isEmail = this._validateEmail(userObject.email)
+    const isEmail = this._validateEmail(userObject.email!)
 
     if (isEmail) {
       const allUsers: User[] = await this._listUsers(next)
-      const exist = this._userExist(userObject.email, allUsers)
+      const exist = this._userExist(userObject.email!, allUsers)
       if (exist) {
         const { error } = await this.supabase.auth.api.resetPasswordForEmail(
-          userObject.email
+          userObject.email!
         )
         if (error) {
           const err: ErrorObject = {
@@ -118,8 +116,8 @@ export default class UserController extends BaseController {
     // if (!userObject.email || !userObject.password) return res.status(400).json({message: "Both email & password is required"})
 
     const { data, error } = await this.supabase.auth.api.signInWithEmail(
-      userObject.email,
-      userObject.password
+      userObject.email!,
+      userObject.password!
     )
     if (error) {
       console.log(error)
