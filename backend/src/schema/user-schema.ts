@@ -11,7 +11,7 @@ export const userSchema = joi.object({
 })
 
 export interface user {
-  uuid?: string,
+  id?: string,
   first_name: string
   last_name: string
   email?: string

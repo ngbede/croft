@@ -65,7 +65,7 @@ export default class UserController extends BaseController {
       })
 
       newUser.roles = roles.get(newUser.user_role.toLowerCase()) // get default user_role list
-      newUser.uuid = user?.id
+      newUser.id = user?.id
       delete newUser.email
       delete newUser.password
       const { data, error: err } = await this.supabase.from(userDetailTable).insert([newUser])
