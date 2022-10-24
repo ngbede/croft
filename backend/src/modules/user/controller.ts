@@ -57,14 +57,18 @@ export default class UserController extends BaseController {
     const newUser: user = req.body
     // validate request body
     const valid: boolean = this._validateBody(newUser, next, schema)
+    newUser.roles = roles.get(newUser.user_role.toLowerCase()) // get default user_role list
 
     if (valid) {
       const { user, error } = await this.supabase.auth.api.createUser({
         email: newUser.email,
-        password: newUser.password
+        password: newUser.password,
+        user_metadata: {
+          user_role: newUser.user_role.toLowerCase(),
+          roles: newUser.roles
+        }
       })
 
-      newUser.roles = roles.get(newUser.user_role.toLowerCase()) // get default user_role list
       newUser.id = user?.id
       delete newUser.email
       delete newUser.password

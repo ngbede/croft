@@ -14,12 +14,13 @@ export const roles = new Map<string, string[]>([
       FarmRoles.createBatch,
       FarmRoles.deleteBatch,
       FarmRoles.manageUser,
+      FarmRoles.editBatch,
       FarmRoles.orders,
       FarmRoles.stockReport,
     ],
   ],
   [
-    'employee',
+    'staff',
     [FarmRoles.stockReport, FarmRoles.createBatch, FarmRoles.editBatch],
   ],
   ['distributor', [FarmRoles.orders]],
@@ -59,7 +60,7 @@ export const userRoles: IUserRoles = {
     ],
   },
   employee: {
-    role: 'employee',
+    role: 'staff',
     roles: [FarmRoles.stockReport, FarmRoles.createBatch, FarmRoles.editBatch],
   },
   distributor: {
@@ -69,7 +70,7 @@ export const userRoles: IUserRoles = {
 }
 
 interface IAppUserRole {
-  role: 'owner' | 'employee' | 'distributor'
+  role: 'owner' | 'staff' | 'distributor'
   roles: FarmRoles[]
 }
 
@@ -87,4 +88,4 @@ type IUserRoles = ownerRole & employeeRole & distributorRole
 
 export type IUserRole = ownerRole | employeeRole | distributorRole
 
-export type IRoles = 'owner' | 'employee' | 'distributor'
+export type IRoles = 'owner' | 'staff' | 'distributor'
