@@ -125,7 +125,7 @@ export default class BaseController {
         .from(this.tableName)
         .select('*')
         .match({ ...filters })
-        .order(orderBy || 'id')
+        .order(orderBy || 'created_at')
         .gte(range || 'created_at', rangeFrom || `${startDate}`)
         .limit(limit || defaultLimit)
 
@@ -196,6 +196,11 @@ export default class BaseController {
     } else {
       return res.status(200).json(data)
     }
+  }
+
+  async put(req: Request, res: Response, next: NextFunction, schema: ObjectSchema): Promise<void | Response> {
+    const error: ErrorObject = { message: 'Implement your own custom put method on extended class!', code: 500 }
+    next(error)
   }
 
   async delete(req: Request, res: Response, next: NextFunction) {
