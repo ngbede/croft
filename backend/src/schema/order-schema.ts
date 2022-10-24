@@ -17,6 +17,7 @@ export const orderSchema = joi.object({
 })
 
 export interface order {
+  id?: string
   farm_id: string
   shipping_address: object
   payment_method: string
@@ -35,4 +36,5 @@ export interface order {
   closed_at: string | null
   created_by: string
   updated_by: string
+  parent_snapshot?: string
 }

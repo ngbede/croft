@@ -15,3 +15,7 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
 export const updateOrder = async (req: Request, res: Response, next: NextFunction) => {
   return await orderControl.patch(req, res, next)
 }
+
+export const createOrderSnapshot = async (req: Request, res: Response, next: NextFunction) => {
+  return await orderControl.put(req, res, next, orderSchema)
+}

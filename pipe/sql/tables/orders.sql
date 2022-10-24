@@ -18,3 +18,15 @@ create table orders (
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now()
 );
+
+alter table public.orders
+ADD column parent_snapshot uuid references public.orders(id)
+
+-- only 1 unique status to an order snapshot list
+alter table public.orders
+add constraint chk_unique_status_per_order unique(order_id,status)
+
+alter table public.orders
+add constraint chk_order_status_types check (
+  LOWER(status) IN ('request','rejected', 'accepted', 'packed', 'in-transit', 'received')
+)
