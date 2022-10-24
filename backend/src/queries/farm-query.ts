@@ -9,7 +9,8 @@ export function getFarmDetailQuery(list?: boolean): string {
         farm_staff as (
             SELECT farm_id,
                 COUNT(*) as total_staff
-            from public.staff
+            from public.user_detail
+            WHERE LOWER(user_role) = 'staff'
             GROUP BY farm_id
         ),
         all_eggs_picked AS (

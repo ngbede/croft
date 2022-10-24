@@ -11,11 +11,7 @@ import { FarmRoles } from '../schema/enums'
 
 const farmRouter = Router()
 
-farmRouter.get(
-  '/farm',
-  authenticator(['owner'], [FarmRoles.createBatch, FarmRoles.deleteBatch]),
-  getFarmList
-)
+farmRouter.get('/farm', authenticator(['owner']), getFarmList)
 farmRouter.get('/farm/:id', authenticator(), getFarm)
 farmRouter.post('/farm/register', registerFarm)
 farmRouter.patch('/farm/:id', authenticator(), updateFarm)
