@@ -7,3 +7,4 @@ ca-certificate.crt
 build
 croft-db.session.sql
 /yarn.lock
+/src/modules/order/api/sample.json
