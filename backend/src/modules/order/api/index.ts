@@ -26,6 +26,7 @@ export const acceptOrder = (orderSnapshot: order, user: string) => {
   throw new Error(errMessage(OrderStatus.accepted))
 }
 
+// it is at this point that we expect payment to happen before the deilvery is done i.e `in-transit` state
 export const packOrder = (orderSnapshot: order, oldOrderSnap: order, user: string) => {
   // TODO: add logic for final qty packed from the farm
   if (!orderSnapshot.is_complete && oldOrderSnap.status === OrderStatus.accepted) {
