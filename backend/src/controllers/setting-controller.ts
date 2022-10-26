@@ -13,5 +13,5 @@ export const uploadSetting = async (req: Request, res: Response, next: NextFunct
 }
 
 export const updateSetting = async (req: Request, res: Response, next: NextFunction) => {
-  return await baseControl.patch(req, res, next)
+  return await baseControl.patch(req, res, next, ['farm_id'])
 }
