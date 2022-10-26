@@ -30,3 +30,6 @@ ADD CONSTRAINT one_setting_per_farm UNIQUE (farm_id)
 
 ALTER TABLE public.farms
 ALTER COLUMN id set DEFAULT gen_random_uuid();
+
+alter table public.farm_setting
+add column chicken_price jsonb[] not null default '{}'
