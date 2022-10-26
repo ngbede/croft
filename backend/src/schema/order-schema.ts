@@ -21,6 +21,7 @@ interface eggItem {
   total_cost?: number
   total_eggs?: number
   eggs_per_crate?: number
+  unit_price?: number
 }
 
 interface chickenItem {

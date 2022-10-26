@@ -65,29 +65,31 @@ export const tallyOrderPrices = (config: farmConfig, orderDoc: order): order => 
   // we expect the last element in the array to be the current price
   const latestEggPrice = config.crate_price.pop()
   const latestChickenPrice = config.chicken_price.pop()
+  let totalAmount = 0
 
-  let layerPrice
-  let broilerPrice
-  let cratePrice: number = orderDoc.items.eggs.crates * (latestEggPrice?.price || 0)
-  let totalEggs: number = orderDoc.items.eggs.crates * config.eggs_per_crate
+  if (orderDoc.items.eggs) {
+    let cratePrice: number = orderDoc.items.eggs.crates * (latestEggPrice?.price || 0)
+    let totalEggs: number = orderDoc.items.eggs.crates * config.eggs_per_crate
+    orderDoc.items.eggs.total_cost = cratePrice
+    orderDoc.items.eggs.total_eggs = totalEggs
+    orderDoc.items.eggs.eggs_per_crate = config.eggs_per_crate
+    orderDoc.items.eggs.unit_price = latestEggPrice?.price
+    totalAmount += cratePrice
+  }
 
-  let totalAmount = cratePrice
-  orderDoc.items.eggs.total_cost = cratePrice
-  orderDoc.items.eggs.total_eggs = totalEggs
-  orderDoc.items.eggs.eggs_per_crate = config.eggs_per_crate
-  orderDoc.items.chickens.forEach(chick => {
-    if (chick.type === ChickenTypes.layers) {
-      layerPrice = chick.quantity * (latestChickenPrice?.layers || 0)
-      chick.total_cost = layerPrice
-      chick.unit_price = latestChickenPrice?.layers
-      totalAmount += layerPrice
-    } else {
-      broilerPrice = chick.quantity * (latestChickenPrice?.broilers || 0)
-      chick.total_cost = broilerPrice
-      chick.unit_price = latestChickenPrice?.broilers
-      totalAmount += broilerPrice
-    }
-  })
+  if (orderDoc.items.chickens) {
+    let currentChickPrice
+    orderDoc.items.chickens.forEach(chick => {
+      if (chick.type === ChickenTypes.layers) {
+        currentChickPrice = latestChickenPrice?.layers || 0
+      } else {
+        currentChickPrice = latestChickenPrice?.broilers || 0
+      }
+      chick.total_cost = chick.quantity * currentChickPrice
+      chick.unit_price = currentChickPrice
+      totalAmount += chick.total_cost
+    })
+  }
 
   orderDoc.total_amount = totalAmount
   return orderDoc
