@@ -4,8 +4,9 @@ import { trackingIdGen } from '../../api/write/tracking-gen'
 import BaseController from '../../controllers/base/base-controller'
 import ErrorObject, { codeMapper } from '../../schema/error'
 import { order } from '../../schema/order-schema'
-import { packOrder, receiveOrder, acceptOrder, rejectOrder, transitOrder, } from './api/index'
-import { OrderStatus } from '../../schema/enums'
+import { packOrder, receiveOrder, acceptOrder, rejectOrder, transitOrder, tallyOrderPrices, } from './api/index'
+import { ChickenTypes, OrderStatus } from '../../schema/enums'
+import { farmConfig } from '../../schema/farm-schema'
 
 export default class OrderController extends BaseController {
   constructor(tableName: string, nameSpace?: string) {
@@ -28,11 +29,23 @@ export default class OrderController extends BaseController {
   }
 
   async post(req: Request, res: Response, next: NextFunction, schema: ObjectSchema) {
-    const newOrder: order = req.body
+    let newOrder: order = req.body
     const valid: boolean = this._validateBody(newOrder, next, schema)
 
     if (valid) {
-      const { data, error } = await this.supabase.from<order>('orders').insert([
+      // First get current farm prices to append to the order
+      const { data: setting, error: configErr } = await this.supabase.from<farmConfig>('farm_setting')
+        .select('*')
+        .match({ farm_id: newOrder.farm_id })
+      console.error(configErr)
+
+      if (setting) {
+        const [farmSetting] = setting
+        // transform order with correct price of items
+        newOrder = tallyOrderPrices(farmSetting, newOrder)
+      }
+
+      const { data, error } = await this.supabase.from<order>(this.tableName).insert([
         {
           ...newOrder,
           order_id: trackingIdGen(),

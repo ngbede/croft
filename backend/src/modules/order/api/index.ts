@@ -1,4 +1,5 @@
-import { OrderStatus } from '../../../schema/enums'
+import { ChickenTypes, OrderStatus } from '../../../schema/enums'
+import { farmConfig } from '../../../schema/farm-schema'
 import { order } from '../../../schema/order-schema'
 
 const errMessage = (status: string) => `invalid order snapshot can't be moved to status '${status}'`
@@ -58,4 +59,36 @@ export const receiveOrder = (orderSnapshot: order, oldOrderSnap: order, user: st
     return orderSnapshot
   }
   throw new Error(errMessage(OrderStatus.received))
+}
+
+export const tallyOrderPrices = (config: farmConfig, orderDoc: order): order => {
+  // we expect the last element in the array to be the current price
+  const latestEggPrice = config.crate_price.pop()
+  const latestChickenPrice = config.chicken_price.pop()
+
+  let layerPrice
+  let broilerPrice
+  let cratePrice: number = orderDoc.items.eggs.crates * (latestEggPrice?.price || 0)
+  let totalEggs: number = orderDoc.items.eggs.crates * config.eggs_per_crate
+
+  let totalAmount = cratePrice
+  orderDoc.items.eggs.total_cost = cratePrice
+  orderDoc.items.eggs.total_eggs = totalEggs
+  orderDoc.items.eggs.eggs_per_crate = config.eggs_per_crate
+  orderDoc.items.chickens.forEach(chick => {
+    if (chick.type === ChickenTypes.layers) {
+      layerPrice = chick.quantity * (latestChickenPrice?.layers || 0)
+      chick.total_cost = layerPrice
+      chick.unit_price = latestChickenPrice?.layers
+      totalAmount += layerPrice
+    } else {
+      broilerPrice = chick.quantity * (latestChickenPrice?.broilers || 0)
+      chick.total_cost = broilerPrice
+      chick.unit_price = latestChickenPrice?.broilers
+      totalAmount += broilerPrice
+    }
+  })
+
+  orderDoc.total_amount = totalAmount
+  return orderDoc
 }

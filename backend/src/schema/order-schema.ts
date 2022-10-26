@@ -1,4 +1,5 @@
 import joi from 'joi'
+import { ChickenTypes } from './enums'
 
 export const orderSchema = joi.object({
   farm_id: joi.string().required().length(36),
@@ -10,11 +11,28 @@ export const orderSchema = joi.object({
   phone_number_2: joi.string().max(20),
   coordinate: joi.string(),
   items: joi.object().required(),
-  total_amount: joi.number().required(),
   note: joi.string(),
   created_by: joi.string().required().length(36),
   updated_by: joi.string(),
 })
+
+interface eggItem {
+  crates: number
+  total_cost?: number
+  total_eggs?: number
+  eggs_per_crate?: number
+}
+
+interface chickenItem {
+  type: ChickenTypes
+  quantity: number
+  total_cost?: number
+  unit_price?: number
+}
+interface orderItems {
+  eggs: eggItem
+  chickens: chickenItem[]
+}
 
 export interface order {
   id?: string
@@ -28,7 +46,7 @@ export interface order {
   status: string
   order_id: string
   coordinate: string
-  items: object
+  items: orderItems
   total_amount: number
   note: string | null
   is_complete: boolean

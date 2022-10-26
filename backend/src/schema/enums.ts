@@ -30,6 +30,10 @@ export enum StockTypes {
   eggCount = 'egg-count',
   chickenCount = 'chicken-count',
 }
+export enum ChickenTypes {
+  layers = 'layers',
+  broilers = 'broilers'
+}
 
 export enum StockOperations {
   add = 'add',

@@ -29,3 +29,20 @@ export interface farm {
   coordinate: coordinate | null
   land_measurement: object | null
 }
+
+interface cratePrice {
+  price: number
+  created_at: string
+}
+
+interface chickenPrice {
+  layers: number
+  broilers: number
+  created_at: string
+}
+export interface farmConfig {
+  farm_id: string
+  crate_price: cratePrice[]
+  eggs_per_crate: number
+  chicken_price: chickenPrice[]
+}
