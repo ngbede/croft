@@ -1,4 +1,5 @@
-import RestAdapter from '../rest-adapter'
+import RestAdapter from '../../rest-adapter'
+import { paystackTxnSchema } from '../../../schema/payment-schema'
 
 interface customer {
   email?: string
@@ -31,8 +32,9 @@ export default class PaystackInterface {
     return this.restAdapter.read(url)
   }
 
+  // TODO: add pagination logic
   async listAllTransactions() {
-    return this.restAdapter.read(this.endpoints.transaction)
+    return this.restAdapter.read<paystackTxnSchema[]>(this.endpoints.transaction)
   }
 
   async getTransaction(id: string) {

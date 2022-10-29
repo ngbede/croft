@@ -52,6 +52,13 @@ export enum OrderStatus {
   received = 'received', // the items have reached final destination and the order is finally complete
 }
 
+export enum PaystackTxnStatus {
+  pending = 'pending',
+  abandoned = 'abandoned',
+  failed = 'failed',
+  success = 'success'
+}
+
 export const userRoles: IUserRoles = {
   owner: {
     role: 'owner',
