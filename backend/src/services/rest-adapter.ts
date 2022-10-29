@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 
 export default class RestAdapter {
 	baseUrl: string
@@ -26,17 +26,17 @@ export default class RestAdapter {
 			})
 		} catch (error) {
 			this._errorHandle(error)
-			console.log('house of dragons')
 			throw error
 		}
 	}
 
-	async read(resource: string, params?: object) {
+	async read<T>(resource: string, params?: object): Promise<AxiosResponse<T, T>> {
 		try {
-			return await axios.get(`${this.baseUrl}${resource}`, {
+			const response = await axios.get(`${this.baseUrl}${resource}`, {
 				params: params,
 				headers: this.header
 			})
+			return response.data
 		} catch (error) {
 			this._errorHandle(error)
 			throw error

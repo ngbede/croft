@@ -56,4 +56,5 @@ export interface order {
   created_by: string
   updated_by: string
   parent_snapshot?: string
+  email?: string
 }
