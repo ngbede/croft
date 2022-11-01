@@ -1,4 +1,4 @@
-create the payment table 
+-- create the payment table 
 
 create table public.payment_debit (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
