@@ -7,6 +7,7 @@ import farmRouter from '../routes/farm'
 import batchRouter from '../routes/batch'
 import stockRouter from '../routes/stock'
 import settingsRouter from '../routes/settings'
+import financeRouter from '../routes/finance'
 import errorHandle from '../middleware/error-handle'
 import { noRoute } from '../middleware/no-route'
 import orderRouter from '../routes/order'
@@ -27,6 +28,7 @@ app.use(baseUri, batchRouter)
 app.use(baseUri, stockRouter)
 app.use(baseUri, settingsRouter)
 app.use(baseUri, orderRouter)
+app.use(baseUri, financeRouter)
 app.use(noRoute)
 app.use(errorHandle)
 

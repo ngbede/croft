@@ -16,14 +16,20 @@ const paystackToken = `Bearer ${process.env.paystack_secret_key}`
 const restAdapter: RestAdapter = new RestAdapter(paystackBaseUri, paystackToken)
 const paystack: PaystackInterface = new PaystackInterface(restAdapter)
 
-export const initPayment = async (orderID: string) => {
+interface responsePattern {
+  status: number
+  message: string
+  data?: object
+}
+
+export const initPayment = async (orderID: string): Promise<responsePattern> => {
   const { data, error } = await supabaseServer.from(orderTableName)
     .select('*')
     .match({ order_id: orderID, status: OrderStatus.packed })
 
   if (error) console.error(error)
 
-  if (data) {
+  if (data && data.length > 0) {
     const orderDoc: order = data[0]
     const { data: userInfo, error } = await supabaseServer.auth.api.getUserById(orderDoc.created_by)
     const { total_amount: amount } = orderDoc
@@ -46,34 +52,38 @@ export const initPayment = async (orderID: string) => {
       }
       const { data, error } = await supabaseServer.from(paymentTableName)
         .insert(transformData)
-      console.log(data)
       if (error) console.error(error)
-      return response.data
+      return {
+        status: 200,
+        message: `Payment successfully initiated for order ${orderDoc.order_id}`,
+        data: data![0]
+      } as responsePattern
     } catch (error) {
       console.error(error)
       throw error
     }
   }
-  return { message: `Order doc with id ${orderID} not found`, status: 404 }
+  return { message: `Order doc with status 'packed' and id ${orderID} not found`, status: 404 } as responsePattern
 }
 
 export const updatePaymentStatus = async () => {
   const { data, error } = await supabaseServer.from<paymentDebit>(paymentTableName)
     .select('*')
-    .match({ status: PaystackTxnStatus.pending }) // get all debit transactions with status pending
+    .in('status', [PaystackTxnStatus.pending, PaystackTxnStatus.abandoned])
 
   if (error) throw error
 
-  if (data) {
+  if (data && data.length > 0) {
     try {
       // TODO: the transaction list endpoint has a return limit
       // could run into scenario where transaction data isn't included in given response
       const response = await paystack.listAllTransactions()
-      const transformData = data.map(debit => {
+      console.log(response)
+      const transformData = data.filter(debit => {
         const debitTransaction = response.data.find(t => t.reference === debit.reference)
         // update the status, data & error if any
         const { status, gateway_response: error } = debitTransaction!
-        debit.status = PaystackTxnStatus.success
+        debit.status = status
         debit.error = error
         debit.data = debitTransaction!
         debit.updated_at = new Date().toJSON()
@@ -92,6 +102,3 @@ export const updatePaymentStatus = async () => {
     }
   }
 }
-
-// initPayment('1234567891')
-updatePaymentStatus().then(e => console.log(e))

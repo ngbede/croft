@@ -71,7 +71,7 @@ export default class BaseController {
     if (invalidReq) {
       const error: ErrorObject = {
         message: 'Invalid request, cant update specified columns in request body',
-        code: 404,
+        code: 400,
         error: columns
       }
       next(error)
